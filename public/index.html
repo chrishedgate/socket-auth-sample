@@ -34,6 +34,22 @@
 
 				socket.on('unauthorized', function(err) {
 					console.log('unauthorized: '+JSON.stringify(err));
+					if (socket.connected) {
+						socket.disconnect();
+					}
+
+					if (_token) {
+						var data = {original_token: _token};
+						var jqxhr = $.post('refresh', data, function(data) {
+							_token = data.token;
+							console.log('refreshed token, retry connect');
+						})
+							.fail(function(jqxhr, textStatus, errorThrown) {
+								_token = null;
+								$('#connect').attr('disabled', 'disabled');
+								console.log('could not refresh token, login needed');
+							});
+					}
 				})
 
 				socket.on('disconnect', function() {
